@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, CheckCircle2, Sparkles, ArrowRight, RotateCcw } from 'lucide-react';
+import { Heart, CheckCircle2, Sparkles, ArrowRight, RotateCcw, ArrowLeft } from 'lucide-react';
 import { AppConfig, QuizQuestion } from '../types';
 import { audioManager } from '../utils/audio';
 
@@ -57,13 +57,36 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     const chosenOption = currentQ.options[optionIndex];
     setActiveReaction(chosenOption.reaction);
 
-    if (currentQIndex < totalQuestions - 1) {
-      setTimeout(() => {
-        setCurrentQIndex((prev) => prev + 1);
-        setActiveReaction(null);
-      }, 1500);
-    } else {
+    // If both questions are answered, play celebratory chord
+    const updatedAnswers = { ...selectedAnswers, [currentQIndex]: optionIndex };
+    if (Object.keys(updatedAnswers).length === totalQuestions) {
       audioManager.playSuccessChord();
+    }
+  };
+
+  const handleGoToNextQuestion = () => {
+    if (currentQIndex < totalQuestions - 1) {
+      const nextIndex = currentQIndex + 1;
+      setCurrentQIndex(nextIndex);
+      const nextAns = selectedAnswers[nextIndex];
+      if (nextAns !== undefined) {
+        setActiveReaction(CUSTOM_QUIZ_QUESTIONS[nextIndex].options[nextAns].reaction);
+      } else {
+        setActiveReaction(null);
+      }
+    }
+  };
+
+  const handleGoToPrevQuestion = () => {
+    if (currentQIndex > 0) {
+      const prevIndex = currentQIndex - 1;
+      setCurrentQIndex(prevIndex);
+      const prevAns = selectedAnswers[prevIndex];
+      if (prevAns !== undefined) {
+        setActiveReaction(CUSTOM_QUIZ_QUESTIONS[prevIndex].options[prevAns].reaction);
+      } else {
+        setActiveReaction(null);
+      }
     }
   };
 
@@ -150,30 +173,47 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             })}
           </div>
 
-          {/* Reaction Feedback */}
+          {/* Reaction Feedback - stays visible so she can read at her own pace */}
           {activeReaction && (
-            <div className="p-3.5 sm:p-4 rounded-xl bg-purple-50 border border-purple-300 text-purple-900 text-xs sm:text-sm animate-fade-in flex items-center gap-2.5">
-              <Heart className="w-4 h-4 fill-purple-600 text-purple-600 shrink-0" />
-              <span className="font-medium leading-snug">{activeReaction}</span>
+            <div className="p-4 sm:p-5 rounded-xl bg-purple-50/90 border border-purple-200 text-purple-950 text-sm sm:text-base animate-fade-in flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <Heart className="w-5 h-5 fill-purple-600 text-purple-600 shrink-0 mt-0.5" />
+                <span className="font-medium leading-relaxed">{activeReaction}</span>
+              </div>
+
+              {/* Manual Next Question Button when on Question 1 */}
+              {currentQIndex < totalQuestions - 1 && selectedAnswers[currentQIndex] !== undefined && (
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={handleGoToNextQuestion}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-semibold rounded-full shadow-md shadow-purple-600/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    <span>Continue to Question 2</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {/* Question Navigation */}
           <div className="flex items-center justify-between pt-2 border-t border-zinc-200 text-xs">
             <button
-              onClick={() => setCurrentQIndex((prev) => Math.max(0, prev - 1))}
+              onClick={handleGoToPrevQuestion}
               disabled={currentQIndex === 0}
-              className="text-zinc-500 hover:text-zinc-800 disabled:opacity-30 disabled:hover:text-zinc-500 transition-colors cursor-pointer py-1"
+              className="inline-flex items-center gap-1 text-zinc-500 hover:text-zinc-800 disabled:opacity-30 disabled:hover:text-zinc-500 transition-colors cursor-pointer py-1"
             >
-              &larr; Previous question
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Previous question</span>
             </button>
 
             {currentQIndex < totalQuestions - 1 && selectedAnswers[currentQIndex] !== undefined && (
               <button
-                onClick={() => setCurrentQIndex((prev) => prev + 1)}
-                className="text-purple-700 hover:text-purple-900 font-semibold transition-colors cursor-pointer py-1"
+                onClick={handleGoToNextQuestion}
+                className="inline-flex items-center gap-1 text-purple-700 hover:text-purple-900 font-semibold transition-colors cursor-pointer py-1"
               >
-                Next question &rarr;
+                <span>Question 2</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}
           </div>

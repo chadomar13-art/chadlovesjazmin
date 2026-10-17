@@ -1,0 +1,6 @@
+{
+  "name": "Happy Anniversary Love Journey",
+  "description": "An interactive romantic anniversary journey featuring a hero celebration, personalized relationship quiz, living botanical canvas garden, and a blooming floral love reveal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
